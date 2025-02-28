@@ -8,14 +8,19 @@ connectDB()
 const app = express()
 app.use(express.json())
 app.use(cors({
-    credentials: true,
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-      "https://samuel-obanla-lapo.netlify.app",
-    ],
-  }))
+  credentials: true,
+  origin: 'https://samuel-obanla-lapo.netlify.app', // Allow only your frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+}));
+// app.use(cors({
+//     origin: [
+//       "http://localhost:5173",
+//       "http://localhost:5174",
+//       "http://localhost:5175",
+//       "https://samuel-obanla-lapo.netlify.app",
+//     ],
+//   }))
 
 
 
