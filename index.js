@@ -9,7 +9,7 @@ const app = express()
 app.use(express.json())
 app.use(cors({
   credentials: true,
-  origin: 'https://samuel-obanla-lapo.netlify.app', // Allow only your frontend
+  origin: ['https://samuel-obanla-lapo.netlify.app', "http://localhost:5173"], // Allow only your frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
   allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
 }));

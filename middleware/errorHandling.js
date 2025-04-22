@@ -1,22 +1,25 @@
 const constant = require('../constant.json')
- 
-// Handling all errors by displaying it in a json format
-const handleError = (error, req, res, next) =>{
-    const statusCode = res.statusCode? res.statusCode : 500
 
-    constant.map((item) =>{
-        let statusArray = Object.values(item)
-        let index = statusArray.indexOf((Object.values(item)).filter(element => element === statusCode)[0])
-        let errorTitle = Object.keys(item)[index]
+const handleError = (error, req, res, next) => {
+    const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+    console.log(statusCode);
+    
 
-        res.json({
-            title: errorTitle,
-            message: error.message,
-            status: statusCode,
-            location: error.stack
-        })
-        return
-    })
-}
+    let errorTitle = "Unknown Error";
+    for (const item of constant) {
+        let statusArray = Object.values(item);
+        let index = statusArray.indexOf(statusCode);
+        if (index !== -1) {
+            errorTitle = Object.keys(item)[index];
+            break;
+        }
+    }
 
-module.exports = handleError
+    res.status(statusCode).json({
+        title: errorTitle,
+        message: error.message,
+        status: statusCode
+    });
+};
+
+module.exports = handleError;
