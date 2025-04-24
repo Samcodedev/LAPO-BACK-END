@@ -1,10 +1,10 @@
 const express = require("express");
 const Card = require("../models/cardModel");
-
-const router = express.Router();
+const { findCardWithBinPrefix, findCardById, getAllCard, deleteSingleCard } = require("../models/modelsController/cardModelController");
+const { expirationDate } = require("../logic/logics");
 
 // Create Card
-const createCard = async (req, res) => {
+const createCard = async (req, res, next) => {
   try {
     const { 
       cardName, 
@@ -20,26 +20,18 @@ const createCard = async (req, res) => {
 
     const { id } = req.user;
 
-    // Check required fields based on the model
-    if (!cardName || !cardScheme || !binPrefix || !currency) {
-      return res.status(400).json({ message: "Required fields: cardName, cardScheme, binPrefix, and currency must be provided" });
+    if (await findCardWithBinPrefix(binPrefix)) {
+        res.status(400);
+        next(new Error("Card already exists"));
     }
 
-    // Check if card with binPrefix already exists
-    const cardExists = await Card.findOne({ binPrefix });
-    if (cardExists) {
-      return res.status(400).json({ message: "Card already exists" });
-    }
-
-    // Validate expiration date if provided
     if (expiration) {  
-      const expirationDate = new Date(expiration);
-      if (expirationDate < new Date()) {
-        return res.status(400).json({ message: "Expiration date cannot be in the past" });
+      if (expirationDate(expiration) < new Date()) {
+        res.status(400);
+        next(new Error("Expiration date cannot be in the past"));
       }
     }
 
-    // Create new card with all possible fields from the model
     const card = new Card({ 
       cardName, 
       cardScheme, 
@@ -49,68 +41,92 @@ const createCard = async (req, res) => {
       binPrefix, 
       expiration, 
       currency,
-      fee: fee || null, // Handle null fee
+      fee: fee || null,
       user: id 
+    })
+
+    if (!await card.save()) {
+      res.status(400);
+      next(new Error("A problem was encountered while creating card try again"));
+    }
+
+    res.status(201).json({ 
+      success: true,
+      message: "Card created successfully" 
     });
 
-    await card.save();
-
-    if (card) {
-      res.status(201).json({ message: "Card created successfully" });
-    } else {
-      res.status(400).json({ message: "Card creation failed" });
-    }
   } catch (error) {
-    console.error("Error creating card:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 };
 
 // Update Card
-const updateCard = async (req, res) => {
+const updateCard = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const card = await Card.findByIdAndUpdate(req.params.id, { ...req.body, user: id }, { new: true }); 
+    if (!await findCardById(req.params.id)) {
+      res.status(404);
+      next(new Error("Card not found"));
+    }
 
-    if (!card) {
-      return res.status(404).json({ message: "Card not found" });
+    if (!await Card.findByIdAndUpdate(req.params.id, { ...req.body, user: id }, { new: true })) {
+      res.status(404).json({
+        success: true,
+        message: "Card not found" 
+      });
     }
-    if (card) {
-      res.status(200).json({ message: "Card updated successfully" });
-    } else {
-      res.status(400).json({ message: "Card update failed" });
-    }
+    res.status(200).json({ 
+      success: true,
+      message: "Card updated successfully" 
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 }
 
 // Get All Cards
-const getAllCards = async (req, res) => {
+const getAllCards = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const cards = await Card.find({ user: id });
+
+    const cards = await getAllCard(id)
     if (!cards) {
-      return res.status(404).json({ message: "No cards found" });
+      res.status(404);
+      next(new Error("No cards found"));
     }
-    res.json(cards);
+
+    res.status(200).json({
+      success: true,
+      data: cards
+    })
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 }
 
 
 // Delete Card
-const deleteCard = async (req, res) => {
+const deleteCard = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const card = await Card.findByIdAndDelete(req.params.id, { user: id });
-    if (!card) {
-      return res.status(404).json({ message: "Card not found" });
+    
+    if (!await deleteSingleCard(req.params.id, id)) {
+      res.status(404);
+      next(new Error("Card not found"));
     }
-    res.json({ message: "Card deleted" });
+
+    res.status(200).json({
+      success: true,
+      message: "Card deleted"
+    })
+    
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 }
 

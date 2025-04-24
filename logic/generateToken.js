@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const generateToken = async (data, expire) => {
+const generateToken = (data, expire) => {
     try {
         return jwt.sign(
             data, 
@@ -8,10 +8,8 @@ const generateToken = async (data, expire) => {
             { expiresIn: expire }
         );
     } catch (err) {
-        throw new Error(`Error generating token: ${error.message}`);
+        throw new Error(`Error generating token: ${err.message}`);
     }
-    
 }
-
 
 module.exports = generateToken

@@ -1,12 +1,11 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const User = require("../models/userModel"); 
 const asyncHandler = require("express-async-handler");
 const { findUserByEmail, findUserByUserName } = require("../models/modelsController/userModelController");
 const generateToken = require("../logic/generateToken");
 
-// Register User
+
 const registerUser = asyncHandler(async (req, res, next) => {
     try {
         const { username, email, password, fullName } = req.body;
@@ -41,7 +40,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
     }
 });
 
-// Login User
+
 const loginUser = asyncHandler(async (req, res, next) => {
     try {
         const { email, password } = req.body;
