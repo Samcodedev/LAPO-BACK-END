@@ -1,7 +1,7 @@
 const express = require("express");
 const Card = require("../models/cardModel");
 const { findCardWithBinPrefix, findCardById, getAllCard, deleteSingleCard } = require("../models/modelsController/cardModelController");
-const { expirationDate } = require("../logic/logics");
+const { expirationDate } = require("../service/logics");
 
 // Create Card
 const createCard = async (req, res, next) => {
@@ -71,10 +71,8 @@ const updateCard = async (req, res, next) => {
     }
 
     if (!await Card.findByIdAndUpdate(req.params.id, { ...req.body, user: id }, { new: true })) {
-      res.status(404).json({
-        success: true,
-        message: "Card not found" 
-      });
+      res.status(404)
+      next(new Error("Card not found"));
     }
     res.status(200).json({ 
       success: true,

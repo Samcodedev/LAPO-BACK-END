@@ -1,41 +1,50 @@
 const express = require("express");
 const Scheme = require("../models/schemeModel");
+const { creatingSchema, updatingSchema, gettingAllSchema, deletingSchema } = require("../models/modelsController/schemaModelController");
 
 
 // Create Scheme
-const createScheme = async (req, res) => {
+const createScheme = async (req, res, next) => {
   try {
     const { schemeName, panLength } = req.body;
     const { id } = req.user;
 
-    if (!schemeName || !panLength) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!creatingSchema(schemeName, panLength, id)) {
+      res.status(404)
+      next(new Error("Scheme creation failed"));
     }
 
-    const scheme = new Scheme({ schemeName, panLength, user: id });
-    await scheme.save();
-    if (scheme) {
-      res.status(201).json({ message: "Scheme created successfully" });
-    } else {
-      res.status(400).json({ message: "Scheme creation failed" });
-    }
+    res.status(201).json({ 
+      success: true,
+      message: "Scheme created successfully" 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 }
 
 // Update Scheme
-const updateScheme = async (req, res) => {
+const updateScheme = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const scheme = await Scheme.findByIdAndUpdate(req.params.id, { ...req.body, user: id }, { new: true });
+    const scheme = updatingSchema(req.params.id, ...req.body, id)
 
     if (!scheme) {
-      return res.status(404).json({ message: "Scheme not found" });
+      res.status(404)
+      next(new Error("Scheme not found"));
     }
-    res.status(200).json(scheme);
+
+    res.status(200).json({
+      success: true,
+      data: [
+        scheme
+      ]
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 }
 
@@ -43,13 +52,23 @@ const updateScheme = async (req, res) => {
 const getAllSchemes = async (req, res) => {
   try {
     const { id } = req.user;
-    const schemes = await Scheme.find({ user: id });
+
+    const schemes = gettingAllSchema(id)
     if (!schemes) {
-      return res.status(404).json({ message: "No schemes found" });
+      res.status(404)
+      next(new Error("No schemes found"));
     }
-    res.status(200).json(schemes);
+
+    res.status(200).json({
+      success: true,
+      data: [
+        schemes
+      ]
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 }
 
@@ -57,13 +76,17 @@ const getAllSchemes = async (req, res) => {
 const deleteScheme = async (req, res) => {
   try {
     const { id } = req.user;
-    const scheme = await Scheme.findByIdAndDelete(req.params.id, { user: id });
-    if (!scheme) {
-      return res.status(404).json({ message: "Scheme not found" });
+    if (!deletingSchema(req.params.id, id )) {
+      res.status(404)
+      next(new Error("Scheme not found"));
     }
-    res.status(200).json({ message: "Scheme deleted" });
+    res.status(200).json({ 
+      success: true,
+      message: "Scheme deleted" 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500);
+    next(new Error(error.message));
   }
 }
 

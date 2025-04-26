@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/userModel"); 
 const asyncHandler = require("express-async-handler");
 const { findUserByEmail, findUserByUserName } = require("../models/modelsController/userModelController");
-const generateToken = require("../logic/generateToken");
+const generateToken = require("../service/generateToken");
 
 
 const registerUser = asyncHandler(async (req, res, next) => {
