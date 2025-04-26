@@ -19,7 +19,7 @@ const updatingSchema = async (schemeId, data, user) => {
 
 const gettingAllSchema = async (user) => {
     try {
-        return await Schema.find({ user: id });
+        return await Schema.find({ user });
     } catch (error) {
         throw new Error(`Error getting all cards: ${error.message}`);
     }
